@@ -1,0 +1,72 @@
+// C++ code
+
+int analogPin = 0;
+int val = 0, cont = 0, cont_2 = 0, cont_3 = 0, m = 0;
+
+const int cantidad = 30;
+int valores[cantidad]; //arreglo 
+int posicion = 0;
+
+void setup()
+{
+ Serial.begin(9600);
+ pinMode (13, INPUT); //pin de entrada 
+ Serial.println("inicie el pulsador para comenzar"); 
+
+}
+
+
+void loop()
+{
+ int estado = digitalRead(13);
+ if(estado == 0){ 
+ 	cont = 1;
+ } //final del if 
+  
+  if(cont == 1 && posicion < cantidad ){//una vez al darle "click" el programa se empieza a ejecutar
+   val = analogRead(analogPin); //todo el if sirve para identificar las caracteristicas de retorno del pin analogico 0
+   Serial.println(val);
+   valores[posicion] = val; 
+   //Serial.print("valor almacenado ");
+   //Serial.print(m);
+   //Serial.print(":");
+   //Serial.println(valores[posicion]);
+   
+   posicion++;
+   delay(60);
+  }
+  
+  if( posicion >= cantidad) {
+    //Serial.println("Se han almacenado todos los valores.");
+    //mesa de operaciones 
+    for(int i = 0; i <= posicion; i++){
+      if(valores[i] > valores[i+1]){
+      	cont_2 = cont_2 +1;
+        if(cont_2 == 10){
+        	Serial.print("serie senoidal");
+          	break;
+        }
+      }//fin del primer if
+      
+      if(valores[i] < valores[i+1]){
+      	cont_2 = cont_2 +1;
+        if(cont_2 == 10){
+        	Serial.print("serie senoidal");
+          	break;
+        }
+      }//fin del segundo if
+      else if(valores[i] == valores[i+1]){
+        cont_3 = cont_3 +1;
+        if(cont_3 == 10){
+        	Serial.println("serie cuadrada");
+          	break;
+        }
+      }//fin del else if 
+    }
+    
+    
+    
+    while(true);  // se detiene el programa 
+  }
+}
+   
