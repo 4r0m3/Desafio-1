@@ -1,0 +1,98 @@
+// C++ code
+
+int analogPin = 0;
+int val = 0, cont = 0, cont_2 = 0, cont_3 = 0, mayor = 0, menor = 0;
+int Amplitud = 0,constante = 0;
+
+const int cantidad = 150;
+int valores[cantidad]; //arreglo 
+int posicion = 0;
+
+void setup()
+{
+ Serial.begin(9600);
+ pinMode (13, INPUT); //pin de entrada 
+ Serial.println("inicie el pulsador para comenzar"); 
+
+}
+
+
+void loop()
+{
+    int estado = digitalRead(13);
+    if(estado == 0){ 
+        cont = 1;
+    } //final del if 
+
+    if(cont == 1 && posicion < cantidad ){//una vez al darle "click" el programa se empieza a ejecutar
+        val = analogRead(analogPin); //todo el if sirve para identificar las caracteristicas de retorno del pin analogico 0
+        Serial.println(val);
+        valores[posicion] = val; 
+        posicion++;
+      	mayor = valores[0];
+        menor = valores[0];
+        delay(10);
+    }
+	
+      
+    //tipo de onda 
+    if(posicion == cantidad) {
+        for(int i = 0; i < posicion - 1; i++){
+        	if(valores[i] != valores[i+1]){
+                cont_2++;
+                if(cont_2 == 10){
+                    Serial.println("serie senoidal");
+                    break;
+                }
+            } 
+          	else {
+            	cont_3++;
+                if(cont_3 == 10){
+                    Serial.println("serie cuadrada");
+                    break;
+                }
+            }
+        }
+      
+		//el pico superior
+        for(int i = 0; i < cantidad; i++){
+            if(valores[i] > mayor){
+                mayor = valores[i];
+            }
+        }
+      	//el pico inferior
+      	for(int i = 0; i < cantidad; i++){
+          if(valores[i]< menor){ 
+          	menor = valores[i];
+          }
+        }
+      	//amplitud de la serie cuadrada 
+      	if(cont_3 == 10){
+      		Amplitud =((((mayor+1)-((menor-1)))/2)/100);
+            Serial.print("Amplitud C: ");
+        	Serial.print(Amplitud);
+      		Serial.println("V ");
+        }
+        //amplitud de la serie senoidal 
+        else if(cont_2 == 10){
+        	Amplitud = ((mayor-(menor))/2)/100;
+      		Serial.print("Amplitud S: ");
+        	Serial.print(Amplitud);
+      		Serial.println("V ");
+        }
+      
+        //Serial.print("el numero mayor es:");
+        //Serial.println(mayor);
+        //Serial.print("el numero menor es:");
+        //Serial.println(menor);
+		
+      
+      //while(true);  // se detiene el programa 
+      val = 0, cont_2 = 0, cont_3 = 0, mayor = 0, menor = 0, posicion =0, menor = 0, mayor=0, Amplitud=0;
+      for(int i = 0; i < cantidad; i++){
+  		valores[i] = 0;
+ 		}
+      delay(1000);
+    }
+  
+}
