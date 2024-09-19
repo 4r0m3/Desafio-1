@@ -1,0 +1,172 @@
+#include <Adafruit_LiquidCrystal.h>
+Adafruit_LiquidCrystal lcd_1(0);
+
+const int analogPin = 0;
+const int pinIniciar = 13;
+const int pinMostrar = 2;
+
+
+int val = 0, cont = 0, cont_1 = 0, cont_2 = 0, cont_3 = 0, cont_4=0, mayor, menor;
+float Amplitud = 0.0;
+bool cuadrada = false; 
+bool senoidal = false;
+bool triangular = false;
+
+const int cantidad = 150;
+int* valores; // puntero para el arreglo dinámico
+int posicion = 0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinIniciar, INPUT); // pin de entrada 
+  pinMode(pinMostrar, INPUT); // pin de entrada
+  Serial.println("inicie el pulsador para comenzar");
+  
+  valores = (int*)malloc(cantidad * sizeof(int));
+  if (valores == NULL) {
+    Serial.println("Error al reservar memoria");
+    while (true); // detener el programa si no se puede reservar memoria
+  }
+  
+  lcd_1.begin(16, 2);
+  lcd_1.println("<------  Iniciar");
+  lcd_1.setCursor(0, 1);
+  lcd_1.println("-------> Mostrar");
+  delay(3000);
+  lcd_1.clear();
+}
+
+void loop() {
+  int estado = digitalRead(pinIniciar);
+  if (estado == 0) { 
+    cont = 1;
+    lcd_1.setCursor(0, 0);
+    lcd_1.print("procesando...");
+  }
+  
+  int estado_2 = digitalRead(pinMostrar);
+  if (estado_2 == 0) {
+    cont_1 = 1;
+  }
+
+  if (cont == 1 && posicion < cantidad) {
+    val = analogRead(analogPin);//le todos los datos generados por el generador
+    Serial.println(val);
+    valores[posicion] = val;
+    posicion++;
+    
+    if (posicion == 1) { // Inicializa mayor y menor solo una vez
+      mayor = valores[0];
+      menor = valores[0];
+    }
+    delay(10);
+  }
+	
+  // hallar la distancia pico a pico, para poder encontrar los valores de la amplitud 
+  for (int i = 0; i < cantidad; i++) {
+    if (valores[i] > mayor) {
+      mayor = valores[i]; //amplitud superior 
+    }
+    if (valores[i] < menor) {
+      menor = valores[i]; //amplitud inferior
+    }
+  }
+  
+  
+  if (posicion == cantidad) {
+    // tipo de onda senoidal mediante condiciones 
+    for (int i = 0; i < posicion - 1; i++) {
+      
+      if (valores[i] != valores[i + 1]) {
+        cont_2++;
+        if (cont_2 == 50) { // reconoce que sea senoidal
+          senoidal = true;
+          break;
+        } 
+      } 
+      else if (valores[i] == valores[i + 1]) { // tipo de onda cuadrada mediante condicionales 
+        cont_3++;
+        if (cont_3 == 50) { // se reconoce que es cuadrada
+          cuadrada = true;
+          break;
+        }
+      }
+    }
+    
+    
+    // LCD senoidal
+    if (senoidal == true && cont_1 == 1) {
+      lcd_1.setCursor(0, 0);
+      lcd_1.print("----Senoidal----");
+      Amplitud = (((mayor - menor) / 2.0) / 100.0);
+      lcd_1.setCursor(0, 1);
+      lcd_1.print("A:");
+      lcd_1.setCursor(2, 1);
+      lcd_1.print(Amplitud);
+      lcd_1.setCursor(6, 1);
+      lcd_1.print("v");
+      lcd_1.setCursor(10, 1);
+      lcd_1.print("F:");
+      lcd_1.setCursor(12, 1);
+      lcd_1.print("desco");
+      
+      delay(2500);
+      lcd_1.clear();
+    }
+
+    // LCD cuadrada
+    if (cuadrada == true && cont_1==1) {
+      lcd_1.setCursor(0, 0);
+      lcd_1.print("----Cuadrada----");
+      Amplitud = ((((mayor + 2.0) - (menor - 1.0)) / 2.0) / 100.0)-0.01;
+      lcd_1.setCursor(0, 1);
+      lcd_1.print("A:");
+      lcd_1.setCursor(2, 1); 
+      lcd_1.print(Amplitud);
+      lcd_1.setCursor(6, 1);
+      lcd_1.print("v");
+      lcd_1.setCursor(10, 1);
+      lcd_1.print("F:");
+      lcd_1.setCursor(12, 1);
+      lcd_1.print("desco");
+      
+      delay(2500);
+      lcd_1.clear();
+    }
+
+    // LCD triangular
+    if (triangular == true && cont_1==1) {
+      lcd_1.setCursor(0, 0);
+      lcd_1.print("----Triangular----");
+      Amplitud = (((mayor - menor) / 2.0) / 100.0);
+      lcd_1.setCursor(0, 1);
+      lcd_1.print("A:");
+      lcd_1.setCursor(2, 1);
+      lcd_1.print(Amplitud);
+      lcd_1.setCursor(6, 1);
+      lcd_1.print("v");
+      lcd_1.setCursor(10, 1);
+      lcd_1.print("F:");
+      lcd_1.setCursor(12, 1);
+      lcd_1.print("desco");
+      
+      delay(2500);
+      lcd_1.clear();
+    }
+
+    // Restablecer valores para la próxima medición
+    senoidal = false;
+    cuadrada = false;
+    triangular = false;
+    cont_2 = 0;
+    cont_1 = 0;
+    cont_3 = 0;
+    cont_4 = 0;
+    mayor = 0;
+    menor = 0;
+    posicion = 0;
+    Amplitud = 0;
+    
+    
+  }
+}
